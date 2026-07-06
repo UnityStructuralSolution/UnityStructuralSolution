@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Unity Structural Solution | Engineering with Precision</title>
-
+    
     <!-- ===== FAVICON ===== -->
     <link rel="icon" href="pic/logo.png" type="image/png" />
     <link rel="shortcut icon" href="pic/logo.png" type="image/png" />
@@ -318,6 +318,8 @@
             padding-top: 80px;
             overflow: hidden;
         }
+        
+        /* Hero background with 3D canvas */
         .hero-bg {
             position: absolute;
             inset: 0;
@@ -326,15 +328,29 @@
                 radial-gradient(ellipse at 20% 40%, rgba(35, 94, 167, 0.25) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 60%, rgba(214, 161, 54, 0.12) 0%, transparent 50%),
                 linear-gradient(145deg, var(--primary) 0%, #142a5a 100%);
+            overflow: hidden;
         }
+        
+        #hero-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
         .hero-bg .grid-overlay {
             position: absolute;
             inset: 0;
+            z-index: 2;
             background-image:
-                linear-gradient(rgba(214, 161, 54, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(214, 161, 54, 0.04) 1px, transparent 1px);
+                linear-gradient(rgba(214, 161, 54, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(214, 161, 54, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
             animation: gridMove 30s linear infinite;
+            pointer-events: none;
         }
         @keyframes gridMove {
             0% {
@@ -344,12 +360,15 @@
                 transform: translate(50px, 50px);
             }
         }
+        
         .hero-bg .particle {
             position: absolute;
+            z-index: 2;
             border-radius: 50%;
             background: var(--accent);
-            opacity: 0.08;
+            opacity: 0.06;
             animation: floatParticle 20s infinite alternate ease-in-out;
+            pointer-events: none;
         }
         .hero-bg .particle:nth-child(2) {
             width: 120px;
@@ -386,7 +405,7 @@
 
         .hero .container {
             position: relative;
-            z-index: 2;
+            z-index: 3;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 50px;
@@ -1665,6 +1684,9 @@
     ============================================================ -->
     <header class="hero" id="home">
         <div class="hero-bg">
+            <!-- 3D Canvas for structural animation -->
+            <canvas id="hero-canvas"></canvas>
+            
             <div class="grid-overlay"></div>
             <div class="particle"></div>
             <div class="particle"></div>
@@ -2181,6 +2203,311 @@
     <a href="https://wa.me/8801602105447?text=Hi%2C%20I%20want%20to%20know%20about%20your%20services" target="_blank" class="floating-badge whatsapp" aria-label="WhatsApp">
         <i class="fab fa-whatsapp"></i>
     </a>
+
+    <!-- ============================================================
+    3D STRUCTURAL ANIMATION (Canvas-based wireframe PEB)
+    ============================================================ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('hero-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+
+            function resize() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                width = canvas.width = rect.width;
+                height = canvas.height = rect.height;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            // ===== 3D STRUCTURAL FRAME (Wireframe PEB) =====
+            // Define a simple 3D building frame
+            const points = [];
+            const edges = [];
+
+            // Building dimensions (scaled to canvas)
+            const w = 8,
+                h = 4.5,
+                d = 5;
+            const bays = 4;
+            const bayW = w / bays;
+
+            // Helper: add point and return index
+            function addPoint(x, y, z) {
+                points.push([x, y, z]);
+                return points.length - 1;
+            }
+
+            // Helper: add edge between two points
+            function addEdge(i1, i2) {
+                edges.push([i1, i2]);
+            }
+
+            // ===== BUILD THE FRAME =====
+
+            // 1. Columns at each bay
+            const colIndices = [];
+            for (let i = 0; i <= bays; i++) {
+                const x = -w / 2 + i * bayW;
+                for (let z of [-d / 2, d / 2]) {
+                    const bottom = addPoint(x, -h / 2, z);
+                    const top = addPoint(x, h / 2, z);
+                    addEdge(bottom, top);
+                    colIndices.push({ bottom, top, x, z });
+                }
+            }
+
+            // 2. Rafters (roof beams) - forming a pitched roof
+            const ridgeH = h / 2 + 0.8;
+            for (let i = 0; i <= bays; i++) {
+                const x = -w / 2 + i * bayW;
+                for (let z of [-d / 2, d / 2]) {
+                    const topIdx = addPoint(x, ridgeH, z);
+                    // Find column top at this x,z
+                    const col = colIndices.find(c => Math.abs(c.x - x) < 0.01 && Math.abs(c.z - z) < 0.01);
+                    if (col) {
+                        addEdge(col.top, topIdx);
+                    }
+                    // Ridge beam
+                    if (i === 0 || i === bays) {
+                        const ridgeEnd = addPoint(x, ridgeH, z);
+                        // Connect to center ridge
+                    }
+                }
+            }
+
+            // 3. Ridge line
+            const ridgeCenter = [];
+            for (let i = 0; i <= bays; i++) {
+                const x = -w / 2 + i * bayW;
+                const p1 = addPoint(x, ridgeH, -d / 2);
+                const p2 = addPoint(x, ridgeH, d / 2);
+                addEdge(p1, p2);
+                ridgeCenter.push({ left: p1, right: p2, x });
+            }
+
+            // 4. Purlins (longitudinal roof members)
+            for (let i = 0; i < 4; i++) {
+                const t = (i + 0.5) / 4;
+                const z = -d / 2 + t * d;
+                for (let j = 0; j <= bays; j++) {
+                    const x = -w / 2 + j * bayW;
+                    const y = ridgeH - 0.3 * (1 - Math.abs(x) / (w / 2) * 0.5);
+                    const p = addPoint(x, y, z);
+                    if (j > 0) {
+                        const prev = points.length - 2;
+                        addEdge(prev, p);
+                    }
+                }
+            }
+
+            // 5. Wall girts (horizontal wall members)
+            for (let level = 0; level < 3; level++) {
+                const y = -h / 2 + (level + 0.5) * h / 3;
+                for (let z of [-d / 2, d / 2]) {
+                    for (let i = 0; i < bays; i++) {
+                        const x1 = -w / 2 + i * bayW;
+                        const x2 = -w / 2 + (i + 1) * bayW;
+                        const p1 = addPoint(x1, y, z);
+                        const p2 = addPoint(x2, y, z);
+                        addEdge(p1, p2);
+                    }
+                }
+                for (let x of [-w / 2, w / 2]) {
+                    for (let i = 0; i < bays; i++) {
+                        const z1 = -d / 2 + i * (d / bays);
+                        const z2 = -d / 2 + (i + 1) * (d / bays);
+                        const p1 = addPoint(x, y, z1);
+                        const p2 = addPoint(x, y, z2);
+                        addEdge(p1, p2);
+                    }
+                }
+            }
+
+            // 6. Cross bracing (X-bracing in end bays)
+            for (let bay of [0, bays - 1]) {
+                const x = -w / 2 + bay * bayW + bayW / 2;
+                for (let z of [-d / 2, d / 2]) {
+                    const zOff = z === -d / 2 ? 0.3 : -0.3;
+                    const p1 = addPoint(x - 0.6, -h / 2 + 0.3, z + zOff);
+                    const p2 = addPoint(x + 0.6, h / 2 - 0.3, z - zOff);
+                    addEdge(p1, p2);
+                    const p3 = addPoint(x + 0.6, -h / 2 + 0.3, z + zOff);
+                    const p4 = addPoint(x - 0.6, h / 2 - 0.3, z - zOff);
+                    addEdge(p3, p4);
+                }
+            }
+
+            // 7. Roof bracing
+            for (let bay of [0, bays - 1]) {
+                const x = -w / 2 + bay * bayW + bayW / 2;
+                const h1 = ridgeH - 0.2;
+                const h2 = ridgeH - 0.2;
+                const p1 = addPoint(x - 0.5, h1, -d / 2 + 0.3);
+                const p2 = addPoint(x + 0.5, h2, d / 2 - 0.3);
+                addEdge(p1, p2);
+                const p3 = addPoint(x + 0.5, h1, -d / 2 + 0.3);
+                const p4 = addPoint(x - 0.5, h2, d / 2 - 0.3);
+                addEdge(p3, p4);
+            }
+
+            // 8. Connection nodes (highlighted points)
+            const nodes = [];
+            for (let i = 0; i < points.length; i++) {
+                // Only select key connection points
+                const p = points[i];
+                if (Math.abs(p[1] - h / 2) < 0.01 || Math.abs(p[1] - ridgeH) < 0.01 ||
+                    Math.abs(p[1] + h / 2) < 0.01) {
+                    nodes.push(i);
+                }
+            }
+
+            // ===== ROTATION STATE =====
+            let rotX = 0.15;
+            let rotY = 0;
+            let rotZ = 0.05;
+            let time = 0;
+
+            // ===== PROJECTION =====
+            function project(x, y, z) {
+                // Simple rotation
+                const cosX = Math.cos(rotX),
+                    sinX = Math.sin(rotX);
+                const cosY = Math.cos(rotY),
+                    sinY = Math.sin(rotY);
+                const cosZ = Math.cos(rotZ),
+                    sinZ = Math.sin(rotZ);
+
+                // Rotate around X
+                let y1 = y * cosX - z * sinX;
+                let z1 = y * sinX + z * cosX;
+
+                // Rotate around Y
+                let x1 = x * cosY + z1 * sinY;
+                let z2 = -x * sinY + z1 * cosY;
+
+                // Rotate around Z
+                let x2 = x1 * cosZ - y1 * sinZ;
+                let y2 = x1 * sinZ + y1 * cosZ;
+
+                // Perspective projection
+                const scale = 120;
+                const fov = 800;
+                const perspective = fov / (fov + z2 * 3);
+
+                const px = width / 2 + x2 * scale * perspective;
+                const py = height / 2 - y2 * scale * perspective;
+
+                return { x: px, y: py, z: z2, perspective };
+            }
+
+            // ===== DRAW =====
+            function draw() {
+                // Clear with fade
+                ctx.clearRect(0, 0, width, height);
+
+                // Update rotation
+                time += 0.006;
+                rotY = time * 0.3;
+                rotX = 0.2 + Math.sin(time * 0.15) * 0.05;
+                rotZ = 0.05 + Math.sin(time * 0.2) * 0.02;
+
+                // Project all points
+                const projected = points.map(p => project(p[0], p[1], p[2]));
+
+                // Sort edges by depth for proper rendering
+                const edgeData = edges.map(([i1, i2]) => {
+                    const p1 = projected[i1];
+                    const p2 = projected[i2];
+                    const depth = (p1.z + p2.z) / 2;
+                    return { i1, i2, p1, p2, depth };
+                });
+                edgeData.sort((a, b) => b.depth - a.depth);
+
+                // Draw edges
+                for (const { i1, i2, p1, p2, depth } of edgeData) {
+                    const alpha = 0.15 + 0.35 * (1 - (depth + 10) / 20);
+                    const isGlow = (i1 < 30 || i2 < 30) && Math.random() < 0.3;
+
+                    // Line color: gold accent
+                    const r = 214,
+                        g = 161,
+                        b = 54;
+                    const baseAlpha = alpha * 0.9;
+
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseAlpha})`;
+                    ctx.lineWidth = 0.8 + 0.6 * (1 - depth / 20);
+                    ctx.stroke();
+
+                    // Glow effect on some edges
+                    if (isGlow) {
+                        ctx.shadowColor = `rgba(214, 161, 54, 0.15)`;
+                        ctx.shadowBlur = 8;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(214, 161, 54, 0.08)`;
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+
+                // Draw nodes (connection points)
+                const nodeSize = 2 + Math.sin(time * 1.5 + 0.5) * 0.8;
+                for (const idx of nodes) {
+                    const p = projected[idx];
+                    if (p.z > -5 && p.z < 8) {
+                        const alpha = 0.4 + 0.4 * (1 - (p.z + 5) / 15);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, nodeSize * (0.8 + 0.2 * Math.sin(time * 1.2 + idx)), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(214, 161, 54, ${alpha * 0.8})`;
+                        ctx.fill();
+                        // Glow
+                        ctx.shadowColor = `rgba(214, 161, 54, 0.2)`;
+                        ctx.shadowBlur = 12;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, nodeSize * 1.8, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(214, 161, 54, ${alpha * 0.1})`;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+
+                // Draw subtle grid lines (engineering blueprint feel)
+                ctx.strokeStyle = `rgba(214, 161, 54, 0.02)`;
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i < 20; i++) {
+                    const x = (i / 20) * width;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                    const y = (i / 20) * height;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            draw();
+
+            // ===== HANDLE RESIZE =====
+            window.addEventListener('resize', () => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                width = canvas.width = rect.width;
+                height = canvas.height = rect.height;
+            });
+        });
+    </script>
 
     <!-- ============================================================
     MAIN SCRIPTS
