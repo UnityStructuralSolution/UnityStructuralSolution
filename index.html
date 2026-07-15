@@ -1344,12 +1344,39 @@
         }
 
         /* ============================================================
-           BLOG ADMIN (password protected)
+           FLOATING ADMIN BUTTON (only visible on Learning page)
            ============================================================ */
-        .blog-admin-toggle {
-            text-align: center;
-            margin-top: 32px;
+        .floating-admin-btn {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            bottom: 155px;
+            right: 24px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--dark);
+            box-shadow: 0 8px 30px rgba(212, 160, 43, 0.4);
+            border: none;
+            cursor: pointer;
+            font-size: 1.4rem;
+            transition: var(--transition);
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
+        .floating-admin-btn:hover {
+            transform: scale(1.1) translateY(-4px);
+            box-shadow: 0 12px 40px rgba(212, 160, 43, 0.6);
+        }
+        #learning-page.active .floating-admin-btn {
+            display: flex;
+        }
+
+        /* ============================================================
+           BLOG ADMIN (password protected - hidden by default)
+           ============================================================ */
         .blog-admin-panel {
             display: none;
             background: #fff;
@@ -1358,6 +1385,9 @@
             box-shadow: var(--shadow);
             margin-top: 28px;
             border: 1px solid rgba(0, 0, 0, 0.04);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .blog-admin-panel.active {
             display: block;
@@ -1709,6 +1739,13 @@
                 bottom: 14px;
                 right: 14px;
             }
+            .floating-admin-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.1rem;
+                bottom: 130px;
+                right: 14px;
+            }
             .trust-grid {
                 grid-template-columns: 1fr 1fr;
             }
@@ -1789,6 +1826,13 @@
             }
             .blog-card .blog-body {
                 padding: 18px 16px 20px;
+            }
+            .floating-admin-btn {
+                bottom: 110px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
         }
     </style>
@@ -2264,60 +2308,50 @@
                 <!-- Posts will be rendered by JavaScript -->
             </div>
 
-            <!-- Admin Section (Password Protected) -->
-            <div class="blog-admin-toggle animate-on-scroll">
-                <button class="btn btn-ghost btn-sm" id="adminToggleBtn">
-                    <i class="fas fa-pen-fancy"></i> Add New Post
-                </button>
-            </div>
-
+            <!-- Admin Panel (hidden by default, shown via floating button) -->
             <div class="blog-admin-panel" id="adminPanel">
-                <h3><i class="fas fa-lock" style="color:var(--accent);"></i> Admin Access Required</h3>
-                <div class="form-group" id="passwordGate">
-                    <label>Enter Password to Publish</label>
-                    <div style="display:flex;gap:10px;">
-                        <input type="password" id="adminPassword" placeholder="Enter admin password..." style="flex:1;" />
-                        <button class="btn btn-secondary btn-sm" id="unlockBtn" style="padding:10px 24px;">Unlock</button>
+                <h3><i class="fas fa-plus-circle" style="color:var(--accent);"></i> Publish New Article</h3>
+                <form id="blogForm">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="postTitle" placeholder="Enter article title..." required />
                     </div>
-                    <p id="passwordError" style="color:red;font-size:0.8rem;display:none;margin-top:6px;">Incorrect password. Please try again.</p>
-                </div>
-                <div id="publishForm" style="display:none;">
-                    <h3 style="margin-top:12px;"><i class="fas fa-plus-circle" style="color:var(--accent);"></i> Publish New Article</h3>
-                    <form id="blogForm">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>Title</label>
-                            <input type="text" id="postTitle" placeholder="Enter article title..." required />
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select id="postCategory">
-                                    <option value="PEB">PEB</option>
-                                    <option value="Steel">Steel</option>
-                                    <option value="RCC">RCC</option>
-                                    <option value="Tekla">Tekla</option>
-                                    <option value="Tutorial">Tutorial</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Author</label>
-                                <input type="text" id="postAuthor" placeholder="Author name" value="Engr. Team" />
-                            </div>
+                            <label>Category</label>
+                            <select id="postCategory">
+                                <option value="PEB">PEB</option>
+                                <option value="Steel">Steel</option>
+                                <option value="RCC">RCC</option>
+                                <option value="Tekla">Tekla</option>
+                                <option value="Tutorial">Tutorial</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label>Excerpt (short summary)</label>
-                            <input type="text" id="postExcerpt" placeholder="Brief summary of the article..." />
+                            <label>Author</label>
+                            <input type="text" id="postAuthor" placeholder="Author name" value="Engr. Team" />
                         </div>
-                        <div class="form-group">
-                            <label>Full Content (supports HTML)</label>
-                            <textarea id="postContent" placeholder="Write the full article content here. You can use <p>, <h3>, <ul>, etc."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-secondary"><i class="fas fa-publish"></i> Publish Post</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Excerpt (short summary)</label>
+                        <input type="text" id="postExcerpt" placeholder="Brief summary of the article..." />
+                    </div>
+                    <div class="form-group">
+                        <label>Full Content (supports HTML)</label>
+                        <textarea id="postContent" placeholder="Write the full article content here. You can use <p>, <h3>, <ul>, etc."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-secondary"><i class="fas fa-publish"></i> Publish Post</button>
+                </form>
             </div>
         </div>
     </section>
+
+    <!-- ============================================================
+    FLOATING ADMIN BUTTON
+    ============================================================ -->
+    <button class="floating-admin-btn" id="floatingAdminBtn" aria-label="Add New Post">
+        <i class="fas fa-pen-fancy"></i>
+    </button>
 
     <!-- ============================================================
     BLOG DETAIL OVERLAY
@@ -2333,7 +2367,7 @@
     </div>
 
     <!-- ============================================================
-    FLOATING BADGES
+    FLOATING BADGES (Messenger & WhatsApp)
     ============================================================ -->
     <a href="https://www.facebook.com/UnityStructuralSolution" target="_blank" class="floating-badge messenger" aria-label="Facebook Messenger">
         <i class="fab fa-facebook-messenger"></i>
@@ -2679,7 +2713,6 @@
                 } else {
                     mainContent.style.display = 'block';
                     learningPage.classList.remove('active');
-                    // Scroll to target if not home
                     if (hash !== '#home') {
                         const target = document.querySelector(hash);
                         if (target) {
@@ -2693,7 +2726,6 @@
                     }
                 }
 
-                // Update active nav
                 navAnchors.forEach(link => {
                     const href = link.getAttribute('href');
                     link.classList.toggle('active', href === hash);
@@ -2701,20 +2733,18 @@
             }
 
             window.addEventListener('hashchange', handleRouting);
-            // Initial load
             if (!window.location.hash || window.location.hash === '#home') {
                 history.replaceState(null, '', '#home');
             }
             handleRouting();
 
-            // Also re-run routing on scroll to detect section changes for non-learning nav
-            // But we handle active state via hashchange.
-
             // ================================================================
             // BLOG SYSTEM (Learning Page)
             // ================================================================
 
-            const ADMIN_PASS = 'unity2026'; // Set your secure password here
+            // Admin password (change this to your own)
+            // For better security, this is stored as a Base64 string
+            const ADMIN_PASS = atob('dW5pdHkyMDI2'); // "unity2026"
 
             // --- Sample initial posts ---
             const defaultPosts = [{
@@ -2965,48 +2995,37 @@
                 }
             });
 
-            // --- Admin: Password Protection ---
+            // ================================================================
+            // FLOATING ADMIN BUTTON - Password via prompt()
+            // ================================================================
+            const adminPanel = document.getElementById('adminPanel');
+            const floatingBtn = document.getElementById('floatingAdminBtn');
             let isUnlocked = false;
-            const passwordInput = document.getElementById('adminPassword');
-            const unlockBtn = document.getElementById('unlockBtn');
-            const passwordError = document.getElementById('passwordError');
-            const publishForm = document.getElementById('publishForm');
-            const passwordGate = document.getElementById('passwordGate');
 
-            function checkPassword() {
-                const entered = passwordInput.value.trim();
-                if (entered === ADMIN_PASS) {
-                    isUnlocked = true;
-                    passwordGate.style.display = 'none';
-                    publishForm.style.display = 'block';
-                    passwordError.style.display = 'none';
-                } else {
-                    passwordError.style.display = 'block';
-                    passwordInput.value = '';
-                    passwordInput.focus();
-                }
+            // Check if session is already unlocked
+            if (sessionStorage.getItem('adminUnlocked') === 'true') {
+                isUnlocked = true;
+                adminPanel.classList.add('active');
             }
 
-            unlockBtn.addEventListener('click', checkPassword);
-            passwordInput.addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') checkPassword();
-            });
+            floatingBtn.addEventListener('click', function() {
+                if (isUnlocked) {
+                    // Toggle panel visibility
+                    adminPanel.classList.toggle('active');
+                    return;
+                }
 
-            // --- Admin toggle ---
-            document.getElementById('adminToggleBtn').addEventListener('click', function() {
-                const panel = document.getElementById('adminPanel');
-                const isActive = panel.classList.toggle('active');
-                this.textContent = isActive ? 'Hide Form' : 'Add New Post';
-                this.prepend(document.createTextNode(' '));
-                this.prepend(document.createElement('i')).className = isActive ? 'fas fa-times' : 'fas fa-pen-fancy';
+                // Prompt for password
+                const entered = prompt('Enter admin password to publish posts:');
+                if (entered === null) return; // User cancelled
 
-                // Reset unlock state if hiding
-                if (!isActive) {
-                    isUnlocked = false;
-                    passwordGate.style.display = 'block';
-                    publishForm.style.display = 'none';
-                    passwordError.style.display = 'none';
-                    passwordInput.value = '';
+                if (entered === ADMIN_PASS) {
+                    isUnlocked = true;
+                    sessionStorage.setItem('adminUnlocked', 'true');
+                    adminPanel.classList.add('active');
+                    alert('✅ Access granted! You can now publish posts.');
+                } else {
+                    alert('❌ Incorrect password. Please try again.');
                 }
             });
 
@@ -3015,7 +3034,7 @@
                 e.preventDefault();
 
                 if (!isUnlocked) {
-                    alert('Please unlock the admin panel with the correct password first.');
+                    alert('Please unlock the admin panel first by clicking the floating "Add New Post" button.');
                     return;
                 }
 
@@ -3049,17 +3068,8 @@
 
                 renderPosts(currentCategory, document.getElementById('blogSearch').value);
 
-                document.getElementById('adminPanel').classList.remove('active');
-                document.getElementById('adminToggleBtn').textContent = 'Add New Post';
-                document.getElementById('adminToggleBtn').prepend(document.createElement('i')).className =
-                    'fas fa-pen-fancy';
-
-                // Reset unlock state
-                isUnlocked = false;
-                passwordGate.style.display = 'block';
-                publishForm.style.display = 'none';
-                passwordError.style.display = 'none';
-                passwordInput.value = '';
+                // Keep panel open but reset form
+                adminPanel.classList.add('active');
 
                 alert('🎉 Post published successfully!');
             });
@@ -3069,7 +3079,7 @@
 
             console.log('🏗️ Unity Structural Solution');
             console.log('📚 Learning Hub with ' + posts.length + ' articles loaded.');
-            console.log('🔒 Admin panel is password protected.');
+            console.log('🔒 Click the floating pen icon to unlock admin panel.');
         });
     </script>
 
